@@ -1,12 +1,13 @@
 from PySide6 import QtCore, QtWidgets, QtGui
 import sys
 import numpy
+import time
 import backend
 
 application = QtWidgets.QApplication(sys.argv)
 window = QtWidgets.QWidget()
 
-windowSize = QtCore.QSize(600,600)
+windowSize = QtCore.QSize(600,700)
 
 class BotWidget(QtWidgets.QWidget):
 
@@ -19,9 +20,15 @@ class BotWidget(QtWidgets.QWidget):
         y = self.bot.getY() - windowSize.height()
         h = self.bot.getHeading()
         t = self.bot.getTrackWidth()
-        self.resize(500,500)
+        self.setMinimumSize(windowSize.width()-50,windowSize.height()-200)
         painter = QtGui.QPainter(self)
         # painter.begin(self)
+        painter.fillRect(self.rect(), QtCore.Qt.GlobalColor.white)
+        pen = QtGui.QPen()
+        pen.setWidth(8)
+        pen.setColor(QtCore.Qt.GlobalColor.black)
+        painter.setPen(pen)
+        painter.drawRect(self.rect())
         center = QtCore.QPointF(x, -(y))
         forward = QtCore.QPointF(x + t * numpy.cos(numpy.deg2rad(h)), -(y + t * numpy.sin(numpy.deg2rad(h))))
         left = QtCore.QPointF(x - t/2 * numpy.sin(numpy.deg2rad(h)), -(y + t/2 * numpy.cos(numpy.deg2rad(h))))
@@ -51,6 +58,10 @@ class InputField(QtWidgets.QWidget):
         self.container.addWidget(self.labelWidget)
         self.container.addWidget(self.valueWidget)
     def value(self) -> float: return toFloat(self.valueWidget.text())
+    def setValue(self, value:float):
+        self.blockSignals(True)
+        self.valueWidget.setText(f"{value:.3f}")
+        self.blockSignals(False)
 
 class BooleanField(QtWidgets.QWidget):
     valueChanged = QtCore.Signal(bool)
@@ -73,38 +84,62 @@ class BooleanField(QtWidgets.QWidget):
 container = QtWidgets.QVBoxLayout(window)
 
 bot = BotWidget(20,-300,30, 12)
+container.addStretch(1)
 container.addWidget(bot, 1)
+container.addStretch(1)
+# container.addWidget(bot, 1, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
 botSettings = QtWidgets.QHBoxLayout()
 x = InputField("x","100")
-y = InputField("y","300")
+y = InputField("y","400")
 h = InputField("direction","0")
 t = InputField("size","20")
+
+def updateFields():
+    x.setValue(bot.bot.getX())
+    y.setValue(bot.bot.getY())
+    h.setValue(bot.bot.getHeading())
+    t.setValue(bot.bot.getTrackWidth())
+
+
+resetPos = QtWidgets.QPushButton("Reset")
+
+def reset():
+    bot.bot.setPose(backend.Pose(100,300,0))
+    bot.bot.setTrackWidth(24)
+    updateFields()
+    bot.update()
+    
+
+reset()
+
+resetPos.clicked.connect(reset)
+botSettings.addWidget(resetPos, 0)
 botSettings.addWidget(x, 0)
 botSettings.addWidget(y, 0)
 botSettings.addWidget(h, 0)
 botSettings.addWidget(t, 0)
 container.addLayout(botSettings)
 
-def update():
+def updateBot():
     bot.bot.setPose(backend.Pose(x.value(), y.value(), h.value()))
     bot.bot.setTrackWidth(t.value())
     bot.update() # redraws it
 
-x.valueChanged.connect(update)
-y.valueChanged.connect(update)
-h.valueChanged.connect(update)
-t.valueChanged.connect(update)
+x.valueChanged.connect(updateBot)
+y.valueChanged.connect(updateBot)
+h.valueChanged.connect(updateBot)
+t.valueChanged.connect(updateBot)
 
-update()
+updateBot()
 
 
 
 runSettings = QtWidgets.QHBoxLayout()
 runtype = BooleanField("Run Wheels","Run Arc", True)
-i1 = InputField("dL",10)
-i2 = InputField("dR",8)
-steps = InputField("Steps",10)
+i1 = InputField("dL",40)
+i2 = InputField("dR",20)
+steps = InputField("Steps",20)
 
 def updateRunType():
     if(runtype.value()):
@@ -114,12 +149,31 @@ def updateRunType():
         i1.labelWidget.setText("dH")
         i2.labelWidget.setText("avgD")
 
-def runBot():
+
+stepsLeft = 0
+timer = QtCore.QTimer()
+
+def runBot_onTick():
+    global stepsLeft
+    if(stepsLeft <= 0): return
+
     if(runtype.value()):
-        bot.bot.runWheels(i1.value(), i2.value(), int(steps.value()))
+        bot.bot.stepWheels(i1.value()/steps.value(), i2.value()/steps.value())
     else:
-        bot.bot.runArc(i1.value(), i2.value(), int(steps.value()))
+        bot.bot.stepArc(i1.value()/steps.value(), i2.value()/steps.value())
     bot.update()
+    updateFields()
+    stepsLeft -= 1
+    if(stepsLeft == 0): bot.bot.setHeading(bot.bot.getHeading()%360)
+        
+timer.setInterval(10)
+timer.timeout.connect(runBot_onTick)
+timer.start()
+
+def runBot():
+    global stepsLeft
+    stepsLeft = int(steps.value())
+        
 
 updateRunType()
 runtype.valueChanged.connect(updateRunType)
@@ -133,6 +187,7 @@ runSettings.addWidget(steps)
 runSettings.addWidget(runButton)
 container.addLayout(runSettings)
 
+window.setMinimumSize(windowSize)
 window.resize(windowSize)
 window.show()
 sys.exit(application.exec())

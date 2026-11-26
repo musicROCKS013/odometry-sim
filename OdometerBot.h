@@ -26,6 +26,7 @@ class OdometerBot
         double getX(){return pose.x;}
         double getY(){return pose.y;}
         double getHeading(){return pose.heading;}
+        Pose getPose(){return pose;}
         double getTrackWidth(){return trackWidth;}
         double getXL(){return pose.x - trackWidth/2 * sin(pose.heading * pi/180);}
         double getYL(){return pose.y + trackWidth/2 * cos(pose.heading * pi/180);}
@@ -48,36 +49,35 @@ class OdometerBot
         {
             pose = stepArc(pose,dH/steps,avgD/steps);
         }
-
-    private:
-        Pose pose;
-        double trackWidth;
+        void stepWheels(double dL, double dR) {pose = stepWheels(pose, dL, dR);}
         Pose stepWheels(Pose start, double dL, double dR) const
         {
             Pose pos = start; // new copy :)
             // do stuff
-            double dH = (dR - dL)/trackWidth;
-
+            double dH = (dR - dL)/trackWidth; // radians
+            
             double avgD = (dR + dL)/2;
-            double avgH = (pi/180*pose.heading + dH/2);
-
+            double avgH = (pi/180*pose.heading + dH/2); // radians
+            
             pos.x += avgD * cos(avgH);
             pos.y += avgD * sin(avgH);
-            pos.heading += 180/pi*dH;
-
+            pos.heading += 180/pi*dH; // convert to degrees
+            
             // xL, yL, xR, and yR can be gotten from the getter methods above
-
+            
             return pos;
         }
-
-        Pose stepArc(Pose start, double dH, double avgD) const
+        void stepArc(double dH, double avgD) {pose = stepArc(pose, dH, avgD);}
+        Pose stepArc(Pose start, double dH, double avgD) const // dH is degrees
         {
             Pose pos = start; // new copy :)
+
+            dH *= pi/180; // convert from degrees to radians
             
             // double dL = avgD - dH * trackWidth/2;
             // double dR = avgD + dH * trackWidth/2;
             
-            double avgH = pi/180*pos.heading + pi/180*dH/2;
+            double avgH = pi/180*pos.heading + dH/2;
             
             pos.x += avgD * cos(avgH);
             pos.y += avgD * sin(avgH);
@@ -85,4 +85,8 @@ class OdometerBot
             
             return pos;
         }
+
+    private:
+        Pose pose;
+        double trackWidth;
 };
