@@ -14,30 +14,41 @@ class BotWidget(QtWidgets.QWidget):
     def __init__(self, x:float, y:float, h:float, t:float):
         super().__init__()
         self.bot = backend.OdometerBot(x,y,h,t)
+        self.setMinimumSize(windowSize.width()-50,windowSize.height()-200)
     
     def paintEvent(self, event):
+        #init vars
         x = self.bot.getX()
         y = self.bot.getY() - windowSize.height()
         h = self.bot.getHeading()
         t = self.bot.getTrackWidth()
-        self.setMinimumSize(windowSize.width()-50,windowSize.height()-200)
+
+        #paint stuff
         painter = QtGui.QPainter(self)
         # painter.begin(self)
         painter.fillRect(self.rect(), QtCore.Qt.GlobalColor.white)
+        #get points to draw
         pen = QtGui.QPen()
-        pen.setWidth(8)
-        pen.setColor(QtCore.Qt.GlobalColor.black)
-        painter.setPen(pen)
-        painter.drawRect(self.rect())
         center = QtCore.QPointF(x, -(y))
         forward = QtCore.QPointF(x + t * numpy.cos(numpy.deg2rad(h)), -(y + t * numpy.sin(numpy.deg2rad(h))))
         left = QtCore.QPointF(x - t/2 * numpy.sin(numpy.deg2rad(h)), -(y + t/2 * numpy.cos(numpy.deg2rad(h))))
         right = QtCore.QPointF(x + t/2 * numpy.sin(numpy.deg2rad(h)), -(y - t/2 * numpy.cos(numpy.deg2rad(h))))
+        #draw front
+        pen.setWidth(int(1+self.bot.getTrackWidth()/8))
+        pen.setColor(QtCore.Qt.GlobalColor.red)
         painter.setPen(QtCore.Qt.GlobalColor.red)
+        painter.setPen(pen)
         painter.drawLine(center, forward)
-        painter.setPen(QtCore.Qt.GlobalColor.blue)
+        #draw sides
+        pen.setColor(QtCore.Qt.GlobalColor.blue)
+        painter.setPen(pen)
         painter.drawLine(center, left)
         painter.drawLine(center, right)
+        #draw outline
+        pen.setWidth(8)
+        pen.setColor(QtCore.Qt.GlobalColor.black)
+        painter.setPen(pen)
+        painter.drawRect(self.rect())
         # painter.end()
         return super().paintEvent(event)
 
