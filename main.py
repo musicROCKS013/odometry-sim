@@ -11,7 +11,7 @@ windowSize = QtCore.QSize(600,700)
 
 class BotWidget(QtWidgets.QWidget):
 
-    def __init__(self, x:float, y:float, h:float, t:float):
+    def __init__(self, x:float=0, y:float=0, h:float=0, t:float=10):
         super().__init__()
         self.bot = backend.OdometerBot(x,y,h,t)
         self.setMinimumSize(windowSize.width()-50,windowSize.height()-200)
@@ -19,7 +19,7 @@ class BotWidget(QtWidgets.QWidget):
     def paintEvent(self, event):
         #init vars
         x = self.bot.getX()
-        y = self.bot.getY() - windowSize.height()
+        y = self.bot.getY()# - windowSize.height()
         h = self.bot.getHeading()
         t = self.bot.getTrackWidth()
 
@@ -27,12 +27,20 @@ class BotWidget(QtWidgets.QWidget):
         painter = QtGui.QPainter(self)
         # painter.begin(self)
         painter.fillRect(self.rect(), QtCore.Qt.GlobalColor.white)
-        #get points to draw
+        painter.translate(self.width()/2,self.height()/2)
+        painter.scale(2,-2)
+        #draw center
         pen = QtGui.QPen()
-        center = QtCore.QPointF(x, -(y))
-        forward = QtCore.QPointF(x + t * numpy.cos(numpy.deg2rad(h)), -(y + t * numpy.sin(numpy.deg2rad(h))))
-        left = QtCore.QPointF(x - t/2 * numpy.sin(numpy.deg2rad(h)), -(y + t/2 * numpy.cos(numpy.deg2rad(h))))
-        right = QtCore.QPointF(x + t/2 * numpy.sin(numpy.deg2rad(h)), -(y - t/2 * numpy.cos(numpy.deg2rad(h))))
+        pen.setWidth(1)
+        pen.setColor(QtCore.Qt.GlobalColor.lightGray)
+        painter.setPen(pen)
+        painter.drawLine(0,-100,0,100)
+        painter.drawLine(-100,0,100,0)
+        #get points to draw
+        center = QtCore.QPointF(x, (y))
+        forward = QtCore.QPointF(x + t * numpy.cos(numpy.deg2rad(h)), (y + t * numpy.sin(numpy.deg2rad(h))))
+        left = QtCore.QPointF(x - t/2 * numpy.sin(numpy.deg2rad(h)), (y + t/2 * numpy.cos(numpy.deg2rad(h))))
+        right = QtCore.QPointF(x + t/2 * numpy.sin(numpy.deg2rad(h)), (y - t/2 * numpy.cos(numpy.deg2rad(h))))
         #draw front
         pen.setWidth(int(1+self.bot.getTrackWidth()/8))
         pen.setColor(QtCore.Qt.GlobalColor.red)
@@ -45,6 +53,8 @@ class BotWidget(QtWidgets.QWidget):
         painter.drawLine(center, left)
         painter.drawLine(center, right)
         #draw outline
+        painter.scale(0.5,-0.5)
+        painter.translate(-self.width()/2,-self.height()/2)
         pen.setWidth(8)
         pen.setColor(QtCore.Qt.GlobalColor.black)
         painter.setPen(pen)
@@ -63,6 +73,7 @@ class InputField(QtWidgets.QWidget):
     def __init__(self, name: str, defaultValue: float = 0):
         super().__init__()
         self.container = QtWidgets.QHBoxLayout(self)
+        self.container.setContentsMargins(0,0,0,0)
         self.labelWidget = QtWidgets.QLabel(name)
         self.valueWidget = QtWidgets.QLineEdit(str(defaultValue))
         self.valueWidget.textChanged.connect(lambda: self.valueChanged.emit(self.value()))
@@ -79,6 +90,7 @@ class BooleanField(QtWidgets.QWidget):
     def __init__(self, trueName: str, falseName: str, value: bool = True):
         super().__init__()
         self.container = QtWidgets.QHBoxLayout(self)
+        self.container.setContentsMargins(0,0,0,0)
         self.trueName = trueName
         self.falseName = falseName
         self.labelWidget = QtWidgets.QLabel(self.trueName if value else self.falseName)
@@ -93,46 +105,50 @@ class BooleanField(QtWidgets.QWidget):
         self.valueChanged.emit(self.value())
 
 container = QtWidgets.QVBoxLayout(window)
+container.setSpacing(8)
+container.setContentsMargins(16,16,16,16)
 
-bot = BotWidget(20,-300,30, 12)
-container.addStretch(1)
+bot = BotWidget()
+bot.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
 container.addWidget(bot, 1)
-container.addStretch(1)
+container.addSpacing(16)
 # container.addWidget(bot, 1, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
 botSettings = QtWidgets.QHBoxLayout()
-x = InputField("x","100")
-y = InputField("y","400")
-h = InputField("direction","0")
-t = InputField("size","20")
+x = InputField("x")
+y = InputField("y")
+h = InputField("direction")
+t = InputField("size")
 
 def updateFields():
     x.setValue(bot.bot.getX())
     y.setValue(bot.bot.getY())
     h.setValue(bot.bot.getHeading())
-    t.setValue(bot.bot.getTrackWidth())
+    t.setValue(max(1e-3,bot.bot.getTrackWidth()))
 
 
 resetPos = QtWidgets.QPushButton("Reset")
 
 def reset():
-    bot.bot.setPose(backend.Pose(100,300,0))
-    bot.bot.setTrackWidth(24)
+    bot.bot.setPose(backend.Pose(0,0,0))
+    bot.bot.setTrackWidth(12)
     updateFields()
     bot.update()
     
-
+resetPos.clicked.connect(reset)
 reset()
 
-resetPos.clicked.connect(reset)
+botSettings.addSpacing(8)
 botSettings.addWidget(resetPos, 0)
 botSettings.addWidget(x, 0)
 botSettings.addWidget(y, 0)
 botSettings.addWidget(h, 0)
 botSettings.addWidget(t, 0)
+botSettings.addSpacing(8)
 container.addLayout(botSettings)
 
 def updateBot():
+    if(t.value()<1e-3): t.setValue(1e-3)
     bot.bot.setPose(backend.Pose(x.value(), y.value(), h.value()))
     bot.bot.setTrackWidth(t.value())
     bot.update() # redraws it
@@ -151,6 +167,7 @@ runtype = BooleanField("Run Wheels","Run Arc", True)
 i1 = InputField("dL",40)
 i2 = InputField("dR",20)
 steps = InputField("Steps",20)
+repeats = InputField("Repeat",5)
 
 def updateRunType():
     if(runtype.value()):
@@ -162,11 +179,17 @@ def updateRunType():
 
 
 stepsLeft = 0
+repeatsLeft = 0
 timer = QtCore.QTimer()
 
 def runBot_onTick():
     global stepsLeft
-    if(stepsLeft <= 0): return
+    global repeatsLeft
+    global steps
+    if(repeatsLeft <= 0): return
+    if (stepsLeft <= 0):
+        stepsLeft = steps.value()
+        repeatsLeft -= 1
 
     if(runtype.value()):
         bot.bot.stepWheels(i1.value()/steps.value(), i2.value()/steps.value())
@@ -175,28 +198,58 @@ def runBot_onTick():
     bot.update()
     updateFields()
     stepsLeft -= 1
-    if(stepsLeft == 0): bot.bot.setHeading(bot.bot.getHeading()%360)
+
+
         
 timer.setInterval(10)
 timer.timeout.connect(runBot_onTick)
 timer.start()
 
 def runBot():
-    global stepsLeft
-    stepsLeft = int(steps.value())
+    # global stepsLeft
+    global repeatsLeft
+    global repeats
+    # stepsLeft = int(steps.value())
+    if(repeatsLeft == 0): repeatsLeft = int(repeats.value())
         
 
 updateRunType()
 runtype.valueChanged.connect(updateRunType)
 runButton = QtWidgets.QPushButton("Run!")
+runButton.setMinimumHeight(64)
+runButton.setStyleSheet("""
+    QPushButton
+    {
+        background-color: lightgreen;
+        color: crimson;
+        font-weight: bold;
+        font-size: 32px;
+        border: 4px solid teal;
+    }
+    QPushButton:hover
+    {
+        color: maroon;
+        background-color: mediumseagreen
+    }
+    QPushButton:pressed
+    {
+        color: darkorange;
+        background-color: mediumspringgreen
+    }
+""")
 runButton.clicked.connect(runBot)
 
+runSettings.addSpacing(8)
 runSettings.addWidget(runtype)
 runSettings.addWidget(i1)
 runSettings.addWidget(i2)
 runSettings.addWidget(steps)
-runSettings.addWidget(runButton)
+runSettings.addWidget(repeats)
+runSettings.addSpacing(8)
 container.addLayout(runSettings)
+container.addSpacing(8)
+container.addWidget(runButton)
+container.addSpacing(8)
 
 window.setMinimumSize(windowSize)
 window.resize(windowSize)

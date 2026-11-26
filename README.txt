@@ -1,219 +1,42 @@
-When creating a new project use
-python -m venv venv
-in the terminal to make the venv folder.
+SETUP:
 
-Activate the venv by running
-source venv/bin/activate
+Initialize the project by running
+    FILE-PATH/qt-odometry-sim bash setup.sh
+in the terminal. This script sets up the virtual environment, activates it, and installs the necessary packages.
+
+Once you have the venv set up, you can start the program by running
+    FILE-PATH/qt-odometry-sim python main.py
 in the terminal.
 
-Then you can run the program by running
-python main.py
-in the terminal.
 
-It's pretty simple!
+EDITING:
 
+If you change the C++ script make sure to run
+    build.sh
+which will re-compile them. Otherwise the python script will act based on the older version of the C++ script.
 
 
+MANUAL:
 
-Math / Psuedocode:
+The robot has two parallel odometers that each measure units of distance moved.
 
-dL = movement of the left encoder
-dR = movement of the right encoder
-dH = change in heading (radians)
+"Reset" Button: Resets the robot's position. It is helpful if the robot moves off of the screen or gets lost.
 
-(xL,yL) = left encoder position
-(xR,yR) = right encoder position
-(x,y) = center of track position
-H = heading
-T = track length (distance between encoders)
+x: The robot's x position.
+y: The robot's y position.
+direction: The robot's heading (degrees).
+size: The distance between the odometers.
 
-dH = (dR - dL)/T
+Checkbox "Run Wheels" / "Run Arc": Toggles the run mode (explained below)
 
-avgD = (dR + dL)/2
-avgH = (H + (H+dH))/2 = H + dH/2 (average between old and new heading)
+Run Wheels: The movement of the robot is defined by the change in distance of each individual odometer.
+dL: The distance recorded by the left odometer.
+dR: The distance recorded by the right odometer.
 
-x += avgD * cos(avgH)
-y += avgD * sin(avgH)
+Run Arc: The movement of the robot is defined by the arc angle and distance that the robot travels.
+dH: The "delta heading," or the relative change in direction (degrees).
+avgD: The distance traveled by the center of the robot along the arc.
 
-H = H + dH
+Steps: The amount of steps that the robot should split the movement into. Higher steps means a slower simulation time, but higher accuracy.
 
-xL = x - T/2 * sin(H)
-yL = y + T/2 * cos(H)
-
-xR = x + T/2 * sin(H)
-yR = y - T/2 * cos(H)
-
-
-
-
-TEST CASE 1: Move forward 5
-
-dL = 5
-dR = 5
-dH = ?
-
-(xL,yL) = (0,6)
-(xR,yR) = (0,-6)
-(x,y) = (0,0)
-H = 0
-T = 12
-
-dH = (dR - dL)/T = (5 - 5)/12 = 0
-
-avgD = (dR + dL)/2 = (5 + 5) / 2 = 5
-avgH = H + dH/2 = 0
-
-x += avgD * cos(avgH)
-    => 0 + 5 * cos(0) = 0 + 5 = 5
-y += avgD * sin(avgH)
-    => 0 + 5 * sin(0) = 0 + 0 = 0
-
-H = 0
-
-xL = x - T/2 * sin(H) = 5 - 12/2 * sin(0) = 5
-yL = y + T/2 * cos(H) = 0 + 12/2 * cos(0) = 6
-
-xR = x + T/2 * sin(H) = 5 + 12/2 * sin(0) = 5
-yR = y - T/2 * cos(H) = 0 - 12/2 * cos(0) = -6
-
-
-
-
-TEST CASE 2: 90 Degree Right Turn
-
-dL = ?
-dR = 0
-dH = -90 * pi/180 = -pi/2
-
-(xL,yL) = (0,6)
-(xR,yR) = (0,-6)
-(x,y) = (0,0)
-H = 0
-T = 12
-
--pi/2 = (0 - dL)/12
-    => dL = 6pi
-
-avgD = (0 + 6pi)/2 = 3pi
-avgH = 0 - (pi/2)/2 = -pi/4
-
-x += avgD * cos(avgH)
-    => 0 + 3pi * cos(-pi/4) = 6.6643 (expected: 6, error: +0.6643)
-y += avgD * sin(avgH)
-    => 0 + 3pi * sin(-pi/4) = -6.6643 (expected: -6, error: -0.6643)
-
-H = -pi/2
-
-xL = 6.6643 - 12/2 * sin(-pi/2) = 12.6643 (expected: 12, error: +0.6643)
-yL = -6.6643 + 12/2 * cos(-pi/2) = -6.6643 (expected: -6, error: -0.6643)
-
-xR = 6.6643 + T/2 * sin(-pi/2) = 0.6643 (expected: 0, error: +0.6643)
-yR = -6.6643 - T/2 * cos(-pi/2) = -6.6643 (expected: -6, error: -0.6643)
-
-
-
-
-TEST CASE 3A: 90 Degree Right Turn, Step 1/2
-
-dL = ?
-dR = 0
-dH = -45 * pi/180 = -pi/4
-
-(xL,yL) = (0,6)
-(xR,yR) = (0,-6)
-(x,y) = (0,0)
-H = 0
-T = 12
-
--pi/4 = (0 - dL)/12
-    => dL = 3pi
-
-avgD = (0 + 3pi)/2 = 3pi/2
-avgH = 0 + (-pi/4)/2 = -pi/8
-
-x += avgD * cos(avgH)
-    => 3pi/2 * cos(-pi/8) = 4.3537
-y += avgD * sin(avgH)
-    => 3pi/2 * sin(-pi/8) = -1.8034
-
-H = -pi/4
-
-xL = 4.3537 - 12/2 * sin(-pi/4) = 8.5963
-yL = -1.8034 + 12/2 * cos(-pi/4) = 2.4392
-
-xR = 4.3537 + 12/2 * sin(-pi/4) = 0.1111
-yR = -1.8034 - 12/2 * cos(-pi/4) = -6.0460
-
-
-
-
-TEST CASE 3B: 90 Degree Right Turn, Step 2/2
-
-dL = ?
-dR = 0
-dH = -45 * pi/180 = -pi/4
-
-(xL,yL) = (8.5963, 2.4392)
-(xR,yR) = (0.1111, -6.0460)
-(x,y) = (4.3537, -1.8034)
-H = -pi/4
-T = 12
-
--pi/4 = (0 - dL)/12
-=> dL = 3pi
-
-avgD = (0 + 3pi)/2 = 3pi/2
-avgH = (-pi/4) + (-pi/4)/2 = -3pi/8
-
-x += avgD * cos(avgH)
-    => 4.3537 + 3pi/2 * cos(-3pi/8) = 6.1571 (expected: 6, error: +0.1571)
-y += avgD * sin(avgH)
-    => -1.8034 + 3pi/2 * sin(-3pi/8) = -6.1571 (expected: -6, error -0.1571)
-
-H = -pi/4 + -pi/4 = -pi/2
-
-xL = 6.1571 - 12/2 * sin(-pi/2) = 12.1571 (expected: 12, error: +0.1571)
-yL = -6.1571 + 12/2 * cos(-pi/2) = -6.1571 (expected: -6, error -0.1571)
-
-xR = 6.1571 + 12/2 * sin(-pi/2) = 0.1571 (expected: 0, error: +0.1571)
-yR = -6.1571 - 12/2 * cos(-pi/2) = -6.1571 (expected: -6, error -0.1571)
-
-Error was reduced from 0.6643 in TEST CASE 2 to 0.1571 in TEST CASE 3.
-This demonstrates the fact that accuracy improves as the operation is
-split into multiple parts, because then the expected movement of the
-center of the track can be estimated more accurately.
-
-
-
-TEST CASE 4: 90 Degree Right Turn In Place
-
-dL = -dR
-dH = -90 * pi/180 = -pi/2
-
-(xL,yL) = (0,6)
-(xR,yR) = (0,-6)
-(x,y) = (0,0)
-H = 0
-T = 12
-
--pi/2 = (dR - dL)/12
-    => dR - dL = -6pi
-    => dR + dR = -6pi
-    => dR = -3pi
-    => dL = 3pi
-
-avgD = (-3pi + 3pi)/2 = 0
-avgH = 0 + (-pi/2)/2 = -pi/4
-
-x += avgD * cos(avgH)
-    => 0 + 0 * cos(-pi/4) = 0
-y += avgD * sin(avgH)
-    => 0 + 0 * sin(-pi/4) = 0
-
-H = -pi/2
-
-xL = 0 - 12/2 * sin(-pi/2) = 6
-yL = 0 + 12/2 * cos(-pi/2) = 0
-
-xR = 0 + 12/2 * sin(-pi/2) = -6
-yR = 0 - 12/2 * cos(-pi/2) = 0
+"Run!" Button: Runs the operation as defined by the checkbox and the input fields.
