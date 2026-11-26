@@ -20,12 +20,19 @@ MANUAL:
 
 The robot has two parallel odometers that each measure units of distance moved.
 
+L
+|
+|-----> forward
+|
+R
+
+
 "Reset" Button: Resets the robot's position. It is helpful if the robot moves off of the screen or gets lost.
 
 x: The robot's x position.
 y: The robot's y position.
 direction: The robot's heading (degrees).
-size: The distance between the odometers.
+size: The size of the track, or the distance between the odometers.
 
 Checkbox "Run Wheels" / "Run Arc": Toggles the run mode (explained below)
 
