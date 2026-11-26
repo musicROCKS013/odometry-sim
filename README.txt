@@ -37,6 +37,7 @@ Run Arc: The movement of the robot is defined by the arc angle and distance that
 dH: The "delta heading," or the relative change in direction (degrees).
 avgD: The distance traveled by the center of the robot along the arc.
 
-Steps: The amount of steps that the robot should split the movement into. Higher steps means a slower simulation time, but higher accuracy.
+Steps: The amount of steps that the robot should split the movement of dL and dR or dH and avgD into. Higher steps means a slower speed, but a higher accuracy.
+Repeat: The amount of times that the robot should repeat the movement of dL and dR or dH and avgD.
 
 "Run!" Button: Runs the operation as defined by the checkbox and the input fields.
