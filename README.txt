@@ -3,22 +3,22 @@
 SETUP:
 
 Initialize the project by running
-    FILE-PATH/qt-odometry-sim bash setup.sh
+    ~/odometry-sim % bash setup.sh
 in the terminal. This script sets up the virtual environment (venv) and installs the necessary packages.
 Afterwards you'll need to activate the venv by running
-    source venv/bin/activate
+    ~/odometry-sim % source venv/bin/activate
 in the terminal.
 
 Once you have the venv set up, you can start the program by running
-    FILE-PATH/qt-odometry-sim python main.py
+    ~/odometry-sim python main.py
 in the terminal.
 
 
 EDITING:
 
-If you change the C++ script make sure to run
-    build.sh
-which will re-compile them. Otherwise the python script will act based on the older version of the C++ script.
+If you change the C++ scripts make sure to run
+    ~/odometry-sim % build.sh
+which will re-compile them. Otherwise the python script will act based on the older version of the C++ scripts.
 
 
 MANUAL:
