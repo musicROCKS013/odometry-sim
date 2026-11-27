@@ -5,3 +5,6 @@ __pycache__/
 *.so
 *.so.*
 .vscode/
+build/
+dist/
+*.spec
