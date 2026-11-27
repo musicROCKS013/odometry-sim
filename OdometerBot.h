@@ -2,12 +2,6 @@
 #include<math.h>
 #define pi 3.1415
 
-int mod(int a, int b)
-{
-    int result = a % b;
-    return (result < 0)? result + b : result;
-}
-
 struct Pose
 {
     public:
@@ -19,9 +13,9 @@ struct Pose
         }
         Pose(double X, double Y, double H): x_(X), y_(Y), h_(H){}
         void setPose(Pose p){x_=p.x();y_=p.y();h_=p.heading();}
-        void setPose(double X, double Y, double H){x_=X;y_=Y;h_=-180+mod(H+180,360);}
+        void setPose(double X, double Y, double H){x_=X;y_=Y;h_=-180+std::fmod(H+180,360);}
         void setPos(double X, double Y) {x_ = X; y_ = Y;}
-        void setHeading(double H) {h_=-180+mod(H+180,360);}
+        void setHeading(double H) {h_=-180+std::fmod(H+180,360);}
         double x(){return x_;}
         double y(){return y_;}
         double heading(){return h_;}
