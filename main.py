@@ -1,6 +1,6 @@
 from PySide6 import QtCore, QtWidgets, QtGui
 import sys
-import time
+import numpy
 import backend
 from widgets import BotWidget, FloatField, IntField, BooleanField
 
@@ -58,8 +58,8 @@ def updateBot():
         bot.protrusionL = i1.value()
         bot.protrusionR = i2.value()
     else:
-        bot.protrusionL = i2.value() - i1.value() * t.value()/2 # double dL = avgD - dH * trackWidth/2;
-        bot.protrusionR = i2.value() + i1.value() * t.value()/2 # double dR = avgD + dH * trackWidth/2;
+        bot.protrusionL = i2.value() - numpy.deg2rad(i1.value()) * t.value()/2 # double dL = avgD - dH * trackWidth/2;
+        bot.protrusionR = i2.value() + numpy.deg2rad(i1.value()) * t.value()/2 # double dR = avgD + dH * trackWidth/2;
     bot.update() # redraws it
 
 x.valueChanged.connect(updateBot)
@@ -70,7 +70,7 @@ i1.valueChanged.connect(updateBot)
 i2.valueChanged.connect(updateBot)
 updateBot()
 
-def toggle():
+def toggleRunType():
     global runtype, runtypeWidget
     runtype = not runtype
     if(runtype):
@@ -82,6 +82,10 @@ def toggle():
             """)
         i1.labelWidget.setText("dL")
         i2.labelWidget.setText("dR")
+        dL = i2.value() - numpy.deg2rad(i1.value()) * t.value()/2
+        dR = i2.value() + numpy.deg2rad(i1.value()) * t.value()/2
+        i1.setValue(dL)
+        i2.setValue(dR)
     else:
         runtypeWidget.setText("Run Arc")
         runtypeWidget.setStyleSheet("""
@@ -91,10 +95,15 @@ def toggle():
             """)
         i1.labelWidget.setText("dH")
         i2.labelWidget.setText("avgD")
+        dH = numpy.rad2deg(i2.value() - i1.value())/t.value()
+        avgD = (i2.value() + i1.value())/2
+        i1.setValue(dH)
+        i2.setValue(avgD)
     updateBot()
-runtypeWidget.clicked.connect(toggle)
-runtype = not True
-toggle() #runtime is now true
+runtypeWidget.clicked.connect(toggleRunType)
+runtype = True
+toggleRunType() #runtime is now true
+toggleRunType() #runtime is now true
 
 
 steps = IntField("Steps",20,1)
