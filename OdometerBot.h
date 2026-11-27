@@ -1,5 +1,5 @@
+#pragma once
 #include<math.h>
-#pragma once // I'm learning so much!!!
 #define pi 3.1415
 
 int mod(int a, int b)
@@ -11,7 +11,12 @@ int mod(int a, int b)
 struct Pose
 {
     public:
-        Pose() = default;
+        Pose()
+        {
+            x_ = 0;
+            y_ = 0;
+            h_ = 0;
+        }
         Pose(double X, double Y, double H): x_(X), y_(Y), h_(H){}
         void setPose(Pose p){x_=p.x();y_=p.y();h_=p.heading();}
         void setPose(double X, double Y, double H){x_=X;y_=Y;h_=-180+mod(H+180,360);}
@@ -39,19 +44,19 @@ class OdometerBot
         void setPos(double x, double y) {pose.setPos(x,y);}
         void setHeading(double h) {pose.setHeading(h);}
         void setTrackWidth(double t){trackWidth = t;}
-        double getX(){return pose.x();}
-        double getY(){return pose.y();}
-        double getHeading(){return pose.heading();}
-        Pose getPose(){return pose;}
-        double getTrackWidth(){return trackWidth;}
-        double getXL(){return pose.x() - trackWidth/2 * sin(pose.heading() * pi/180);}
-        double getYL(){return pose.y() + trackWidth/2 * cos(pose.heading() * pi/180);}
-        double getXR(){return pose.x() + trackWidth/2 * sin(pose.heading() * pi/180);}
-        double getYR(){return pose.y() - trackWidth/2 * cos(pose.heading() * pi/180);}
-        double getXL(Pose p, double TrackWidth){return p.x() - TrackWidth/2 * sin(p.heading() * pi/180);}
-        double getYL(Pose p, double TrackWidth){return p.y() + TrackWidth/2 * cos(p.heading() * pi/180);}
-        double getXR(Pose p, double TrackWidth){return p.x() + TrackWidth/2 * sin(p.heading() * pi/180);}
-        double getYR(Pose p, double TrackWidth){return p.y() - TrackWidth/2 * cos(p.heading() * pi/180);}
+        double const getX(){return pose.x();}
+        double const getY(){return pose.y();}
+        double const getHeading(){return pose.heading();}
+        Pose const getPose(){return pose;}
+        double const getTrackWidth(){return trackWidth;}
+        double const getXL(){return pose.x() - trackWidth/2 * sin(pose.heading() * pi/180);}
+        double const getYL(){return pose.y() + trackWidth/2 * cos(pose.heading() * pi/180);}
+        double const getXR(){return pose.x() + trackWidth/2 * sin(pose.heading() * pi/180);}
+        double const getYR(){return pose.y() - trackWidth/2 * cos(pose.heading() * pi/180);}
+        double const getXL(Pose p, double TrackWidth){return p.x() - TrackWidth/2 * sin(p.heading() * pi/180);}
+        double const getYL(Pose p, double TrackWidth){return p.y() + TrackWidth/2 * cos(p.heading() * pi/180);}
+        double const getXR(Pose p, double TrackWidth){return p.x() + TrackWidth/2 * sin(p.heading() * pi/180);}
+        double const getYR(Pose p, double TrackWidth){return p.y() - TrackWidth/2 * cos(p.heading() * pi/180);}
         
         void runWheels(double dL, double dR, int steps)
         {
@@ -63,7 +68,10 @@ class OdometerBot
 
         void runArc(double dH, double avgD, int steps)
         {
-            pose = stepArc(pose,dH/steps,avgD/steps);
+            for(int i = 0; i < steps; i++)
+            {
+                pose = stepArc(pose,dH/steps,avgD/steps);
+            }
         }
         void stepWheels(double dL, double dR) {pose = stepWheels(pose, dL, dR);}
         Pose stepWheels(Pose start, double dL, double dR) const
