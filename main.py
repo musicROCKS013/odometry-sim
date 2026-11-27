@@ -2,7 +2,7 @@ from PySide6 import QtCore, QtWidgets, QtGui
 import sys
 import time
 import backend
-from widgets import BotWidget, InputField, BooleanField
+from widgets import BotWidget, FloatField, IntField, BooleanField
 
 application = QtWidgets.QApplication(sys.argv)
 windowSize = QtCore.QSize(600,700)
@@ -15,10 +15,10 @@ bot.setMinimumSize(windowSize.width()-50,windowSize.height()-200)
 bot.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
 # container.addWidget(bot, 1, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
-x = InputField("x")
-y = InputField("y")
-h = InputField("direction")
-t = InputField("size")
+x = FloatField("x")
+y = FloatField("y")
+h = FloatField("direction")
+t = FloatField("size", minimum=1e-3, stepSize=1)
 def updateFields():
     x.setValue(bot.bot.getX())
     y.setValue(bot.bot.getY())
@@ -49,8 +49,8 @@ reset()
 
 
 runtype = BooleanField("Run Wheels","Run Arc", True)
-i1 = InputField("dL",40)
-i2 = InputField("dR",20)
+i1 = FloatField("dL",40)
+i2 = FloatField("dR",20)
 def updateRunType():
     if(runtype.value()):
         i1.labelWidget.setText("dL")
@@ -61,8 +61,8 @@ def updateRunType():
 runtype.valueChanged.connect(updateRunType)
 updateRunType()
 
-steps = InputField("Steps",20)
-repeats = InputField("Repeat",5)
+steps = IntField("Steps",20,1)
+repeats = IntField("Repeat",5,1)
 def runBot():
     # global stepsLeft
     global repeatsLeft
@@ -83,7 +83,7 @@ def runBot_onTick(): # this method is triggered by the timer every 10 ms. If the
     # print(repeats.value() * steps.value() - (repeatsLeft*steps.value() + stepsLeft))
     stepsLeft -= 1
     if (repeatsLeft > 0 and stepsLeft <= 0):
-        stepsLeft = steps.value()
+        stepsLeft = int(steps.value())
         repeatsLeft -= 1
 timer = QtCore.QTimer()
 timer.setInterval(10)

@@ -56,25 +56,42 @@ class BotWidget(QtWidgets.QWidget):
         return super().paintEvent(event)
 
 
-class InputField(QtWidgets.QWidget):
+class FloatField(QtWidgets.QWidget):
     valueChanged = QtCore.Signal(float)
-    def __init__(self, name: str, defaultValue: float = 0):
+    def __init__(self, name: str, defaultValue: float = 0, minimum: float = -999, maximum: float = 999, stepSize: float = 10):
         super().__init__()
         self.container = QtWidgets.QHBoxLayout(self)
         self.container.setContentsMargins(0,0,0,0)
-        self.validator = QtGui.QDoubleValidator(-10e3,10e3,3)
         self.labelWidget = QtWidgets.QLabel(name)
-        self.valueWidget = QtWidgets.QLineEdit(str(defaultValue))
-        self.valueWidget.textChanged.connect(lambda: self.valueChanged.emit(self.value()))
-        self.valueWidget.setValidator(self.validator)
+        self.valueWidget = QtWidgets.QDoubleSpinBox(minimum=minimum,maximum=maximum)
+        self.valueWidget.setValue(defaultValue)
+        self.valueWidget.setSingleStep(stepSize)
+        self.valueWidget.valueChanged.connect(lambda: self.valueChanged.emit(self.value()))
         self.container.addWidget(self.labelWidget)
         self.container.addWidget(self.valueWidget)
-    def value(self) -> float: return toFloat(self.valueWidget.text())
+    def value(self) -> float: return self.valueWidget.value()
     def setValue(self, value:float):
         self.blockSignals(True)
-        self.valueWidget.setText(f"{value:.3f}")
+        self.valueWidget.setValue(value)
         self.blockSignals(False)
 
+class IntField(QtWidgets.QWidget):
+    valueChanged = QtCore.Signal(float)
+    def __init__(self, name: str, default: int = 0, minimum: int = 0, maximum: int = 999):
+        super().__init__()
+        self.container = QtWidgets.QHBoxLayout(self)
+        self.container.setContentsMargins(0,0,0,0)
+        self.labelWidget = QtWidgets.QLabel(name)
+        self.valueWidget = QtWidgets.QSpinBox(minimum=minimum, maximum=maximum)
+        self.valueWidget.setValue(default)
+        self.valueWidget.valueChanged.connect(lambda: self.valueChanged.emit(self.value()))
+        self.container.addWidget(self.labelWidget)
+        self.container.addWidget(self.valueWidget)
+    def value(self) -> int: return self.valueWidget.value()
+    def setValue(self, value:int):
+        self.blockSignals(True)
+        self.valueWidget.setValue(value)
+        self.blockSignals(False)
 
 class BooleanField(QtWidgets.QWidget):
     valueChanged = QtCore.Signal(bool)
