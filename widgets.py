@@ -30,10 +30,16 @@ class BotWidget(QtWidgets.QWidget):
         painter.drawLine(0,-100,0,100)
         painter.drawLine(-100,0,100,0)
         #get points to draw
-        center = QtCore.QPointF(x, (y))
+        # center = QtCore.QPointF(x, (y))
+        # forward = QtCore.QPointF(x + t * numpy.cos(numpy.deg2rad(h)), (y + t * numpy.sin(numpy.deg2rad(h))))
+        # left = QtCore.QPointF(x - t/2 * numpy.sin(numpy.deg2rad(h)), (y + t/2 * numpy.cos(numpy.deg2rad(h))))
+        # right = QtCore.QPointF(x + t/2 * numpy.sin(numpy.deg2rad(h)), (y - t/2 * numpy.cos(numpy.deg2rad(h))))
+
+        center = QtCore.QPointF(self.bot.getX(),self.bot.getY())
         forward = QtCore.QPointF(x + t * numpy.cos(numpy.deg2rad(h)), (y + t * numpy.sin(numpy.deg2rad(h))))
-        left = QtCore.QPointF(x - t/2 * numpy.sin(numpy.deg2rad(h)), (y + t/2 * numpy.cos(numpy.deg2rad(h))))
-        right = QtCore.QPointF(x + t/2 * numpy.sin(numpy.deg2rad(h)), (y - t/2 * numpy.cos(numpy.deg2rad(h))))
+        left = QtCore.QPointF(self.bot.getXL(),self.bot.getYL())
+        right = QtCore.QPointF(self.bot.getXR(),self.bot.getYR())
+
         #draw front
         pen.setWidth(int(1+self.bot.getTrackWidth()/8))
         pen.setColor(QtCore.Qt.GlobalColor.red)
