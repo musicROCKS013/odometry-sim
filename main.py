@@ -19,11 +19,22 @@ x = FloatField("x")
 y = FloatField("y")
 h = FloatField("direction")
 t = FloatField("size", minimum=1e-3, stepSize=1)
+
+left_wheel_pos = QtWidgets.QLabel()
+right_wheel_pos = QtWidgets.QLabel()
+
+def updateWheelLabels():
+    left_wheel_pos.setText(f"Left Wheel Pos:\n    x: {bot.bot.getXL():.2f}\n    y: {bot.bot.getYL():.2f}")
+    right_wheel_pos.setText(f"Right Wheel Pos:\n    x: {bot.bot.getXR():.2f}\n    y: {bot.bot.getYR():.2f}")
+
 def updateFields():
+    global x, y, h, t, left_wheel_pos, right_wheel_pos
     x.setValue(bot.bot.getX())
     y.setValue(bot.bot.getY())
     h.setValue(bot.bot.getHeading())
     t.setValue(max(1e-3,bot.bot.getTrackWidth()))
+    updateWheelLabels()
+
 
 resetPos = QtWidgets.QPushButton("Reset")
 resetPos.setStyleSheet("""
@@ -61,6 +72,7 @@ def updateBot():
         bot.protrusionL = i2.value() - numpy.deg2rad(i1.value()) * t.value()/2 # double dL = avgD - dH * trackWidth/2;
         bot.protrusionR = i2.value() + numpy.deg2rad(i1.value()) * t.value()/2 # double dR = avgD + dH * trackWidth/2;
     bot.update() # redraws it
+    updateWheelLabels()
 
 x.valueChanged.connect(updateBot)
 y.valueChanged.connect(updateBot)
@@ -167,6 +179,8 @@ botSettings.addWidget(y, 0)
 botSettings.addWidget(h, 0)
 botSettings.addWidget(t, 0)
 botSettings.addWidget(resetPos, 0)
+botSettings.addWidget(left_wheel_pos, 0)
+botSettings.addWidget(right_wheel_pos, 0)
 # botSettings.addSpacing(8)
 botSettings.addStretch()
 
