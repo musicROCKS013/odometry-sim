@@ -80,7 +80,7 @@ def runBot_onTick(): # this method is triggered by the timer every 10 ms. If the
         bot.bot.stepArc(i1.value()/steps.value(), i2.value()/steps.value())
     bot.update()
     updateFields()
-    print(repeats.value() * steps.value() - (repeatsLeft*steps.value() + stepsLeft))
+    # print(repeats.value() * steps.value() - (repeatsLeft*steps.value() + stepsLeft))
     stepsLeft -= 1
     if (repeatsLeft > 0 and stepsLeft <= 0):
         stepsLeft = steps.value()
