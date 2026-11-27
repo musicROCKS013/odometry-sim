@@ -99,7 +99,7 @@ class FloatField(QtWidgets.QWidget):
 
 class IntField(QtWidgets.QWidget):
     valueChanged = QtCore.Signal(float)
-    def __init__(self, name: str, default: int = 0, minimum: int = 0, maximum: int = 999):
+    def __init__(self, name: str, default: int = 0, minimum: int = 0, maximum: int = 999, stepSize: int = 10):
         super().__init__()
         self.container = QtWidgets.QHBoxLayout(self)
         self.container.setContentsMargins(0,0,0,0)
@@ -109,6 +109,7 @@ class IntField(QtWidgets.QWidget):
         
         self.valueWidget = QtWidgets.QSpinBox(minimum=minimum, maximum=maximum)
         self.valueWidget.setValue(default)
+        self.valueWidget.setSingleStep(stepSize)
         self.valueWidget.valueChanged.connect(lambda: self.valueChanged.emit(self.value()))
         
         self.labelWidget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum,QtWidgets.QSizePolicy.Policy.Fixed)

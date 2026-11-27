@@ -22,10 +22,15 @@ t = FloatField("size", minimum=1e-3, stepSize=1)
 
 left_wheel_pos = QtWidgets.QLabel()
 right_wheel_pos = QtWidgets.QLabel()
+repsLabel = QtWidgets.QLabel()
+stepsLabel = QtWidgets.QLabel()
+msDelay = IntField("msDelay",10,1,1e5,5)
 
-def updateWheelLabels():
+def updatOtherLabels():
     left_wheel_pos.setText(f"Left Wheel Pos:\n    x: {bot.bot.getXL():.2f}\n    y: {bot.bot.getYL():.2f}")
     right_wheel_pos.setText(f"Right Wheel Pos:\n    x: {bot.bot.getXR():.2f}\n    y: {bot.bot.getYR():.2f}")
+    repsLabel.setText(f"Repeats: {repeatsLeft}")
+    stepsLabel.setText(f"Steps: {stepsLeft}")
 
 def updateFields():
     global x, y, h, t, left_wheel_pos, right_wheel_pos
@@ -33,7 +38,7 @@ def updateFields():
     y.setValue(bot.bot.getY())
     h.setValue(bot.bot.getHeading())
     t.setValue(max(1e-3,bot.bot.getTrackWidth()))
-    updateWheelLabels()
+    updatOtherLabels()
 
 
 resetPos = QtWidgets.QPushButton("Reset")
@@ -72,7 +77,7 @@ def updateBot():
         bot.protrusionL = i2.value() - numpy.deg2rad(i1.value()) * t.value()/2 # double dL = avgD - dH * trackWidth/2;
         bot.protrusionR = i2.value() + numpy.deg2rad(i1.value()) * t.value()/2 # double dR = avgD + dH * trackWidth/2;
     bot.update() # redraws it
-    updateWheelLabels()
+    updatOtherLabels()
 
 x.valueChanged.connect(updateBot)
 y.valueChanged.connect(updateBot)
@@ -122,12 +127,21 @@ steps = IntField("Steps",20,1)
 repeats = IntField("Repeat",1,1)
 def runBot():
     # global stepsLeft
-    global repeatsLeft, repeats
+    global repeatsLeft, repeats, steps, stepsLeft
     # stepsLeft = int(steps.value())
-    if(repeatsLeft == 0): repeatsLeft = int(repeats.value())
+    if(repeatsLeft <= 0 and stepsLeft <= 0):
+        repeatsLeft = int(repeats.value())
+        cancel_button()
+    else:
+        #cancel operation
+        repeatsLeft = 0
+        stepsLeft = 0
+        updatOtherLabels()
+        run_button()
 def runBot_onTick(): # this method is triggered by the timer every 10 ms. If there are steps left or it needs to repeat, it will do so.
     global stepsLeft, repeatsLeft, steps, runtype
-    if(repeatsLeft <= 0 and stepsLeft <= 0): return
+    if(repeatsLeft <= 0 and stepsLeft <= 0):
+        return
     
     stepsLeft -= 1
     if (repeatsLeft > 0 and stepsLeft <= 0):
@@ -140,34 +154,68 @@ def runBot_onTick(): # this method is triggered by the timer every 10 ms. If the
         bot.bot.stepArc(i1.value()/steps.value(), i2.value()/steps.value())
     bot.update()
     updateFields()
+
+    if(repeatsLeft == 0 and stepsLeft == 0): run_button()
     
 timer = QtCore.QTimer()
-timer.setInterval(10)
+def setInterval():
+    timer.setInterval(msDelay.value())
+msDelay.valueChanged.connect(setInterval)
+setInterval()
 timer.timeout.connect(runBot_onTick)
 timer.start()
 
-runButton = QtWidgets.QPushButton("Run!")
-runButton.setMinimumHeight(64)
-runButton.setStyleSheet("""
-    QPushButton
-    {
-        background-color: lightgreen;
-        color: crimson;
-        font-weight: bold;
-        font-size: 32px;
-        border: 4px solid teal;
-    }
-    QPushButton:hover
-    {
-        color: maroon;
-        background-color: mediumseagreen
-    }
-    QPushButton:pressed
-    {
-        color: darkorange;
-        background-color: mediumspringgreen
-    }
-""")
+runButton = QtWidgets.QPushButton()
+
+def run_button():
+    runButton.setText("Run!")
+    runButton.setMinimumHeight(64)
+    runButton.setStyleSheet("""
+        QPushButton
+        {
+            background-color: lightgreen;
+            color: crimson;
+            font-weight: bold;
+            font-size: 32px;
+            border: 4px solid teal;
+        }
+        QPushButton:hover
+        {
+            color: maroon;
+            background-color: mediumseagreen
+        }
+        QPushButton:pressed
+        {
+            color: darkorange;
+            background-color: mediumspringgreen
+        }
+    """)
+
+def cancel_button():
+    runButton.setText("Cancel")
+    runButton.setMinimumHeight(64)
+    runButton.setStyleSheet("""
+        QPushButton
+        {
+            background-color: darkgray;
+            color: black;
+            font-weight: bold;
+            font-size: 32px;
+            border: 4px solid darkslategray;
+        }
+        QPushButton:hover
+        {
+            color: black;
+            background-color: gray
+        }
+        QPushButton:pressed
+        {
+            color: black;
+            background-color: lightgray
+        }
+    """)
+
+run_button()
 runButton.setSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Maximum)
 runButton.setMinimumWidth(120)
 runButton.clicked.connect(runBot)
@@ -181,6 +229,9 @@ botSettings.addWidget(t, 0)
 botSettings.addWidget(resetPos, 0)
 botSettings.addWidget(left_wheel_pos, 0)
 botSettings.addWidget(right_wheel_pos, 0)
+botSettings.addWidget(repsLabel, 0)
+botSettings.addWidget(stepsLabel, 0)
+botSettings.addWidget(msDelay, 0)
 # botSettings.addSpacing(8)
 botSettings.addStretch()
 
@@ -215,6 +266,7 @@ lowerContainer.addSpacing(8)
 
 
 window = QtWidgets.QWidget()
+window.setWindowTitle("Aiden's Odometry Sim")
 mainContainer = QtWidgets.QVBoxLayout(window)
 mainContainer.addLayout(upperContainer)
 mainContainer.addLayout(lowerContainer)

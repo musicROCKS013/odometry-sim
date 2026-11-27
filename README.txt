@@ -1,3 +1,5 @@
+---AIDEN'S ODOMETRY SIM---
+
 SETUP:
 
 Initialize the project by running
@@ -18,7 +20,8 @@ which will re-compile them. Otherwise the python script will act based on the ol
 
 MANUAL:
 
-The robot has two parallel odometers that each measure units of distance moved.
+This is a differential drive robot. It has two parallel odometers that each measure units of distance moved.
+From these distances, the position and heading of the robot, relative to its starting point, can be determined.
 
 L
 |
