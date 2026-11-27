@@ -107,17 +107,19 @@ def runBot():
 def runBot_onTick(): # this method is triggered by the timer every 10 ms. If there are steps left or it needs to repeat, it will do so.
     global stepsLeft, repeatsLeft, steps, runtype
     if(repeatsLeft <= 0 and stepsLeft <= 0): return
+    
+    stepsLeft -= 1
+    if (repeatsLeft > 0 and stepsLeft <= 0):
+        stepsLeft = int(steps.value()) - 1
+        repeatsLeft -= 1
+
     if(runtype):
         bot.bot.stepWheels(i1.value()/steps.value(), i2.value()/steps.value())
     else:
         bot.bot.stepArc(i1.value()/steps.value(), i2.value()/steps.value())
     bot.update()
     updateFields()
-    # print(repeats.value() * steps.value() - (repeatsLeft*steps.value() + stepsLeft))
-    stepsLeft -= 1
-    if (repeatsLeft > 0 and stepsLeft <= 0):
-        stepsLeft = int(steps.value())
-        repeatsLeft -= 1
+    
 timer = QtCore.QTimer()
 timer.setInterval(10)
 timer.timeout.connect(runBot_onTick)

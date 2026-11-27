@@ -2,28 +2,34 @@
 #include<math.h>
 #define pi 3.1415
 
+
 struct Pose
 {
     public:
-        Pose()
-        {
-            x_ = 0;
-            y_ = 0;
-            h_ = 0;
-        }
-        Pose(double X, double Y, double H): x_(X), y_(Y), h_(H){}
-        void setPose(Pose p){x_=p.x();y_=p.y();h_=p.heading();}
-        void setPose(double X, double Y, double H){x_=X;y_=Y;h_=-180+std::fmod(H+180,360);}
-        void setPos(double X, double Y) {x_ = X; y_ = Y;}
-        void setHeading(double H) {h_=-180+std::fmod(H+180,360);}
-        double x(){return x_;}
-        double y(){return y_;}
-        double heading(){return h_;}
+    Pose()
+    {
+        x_ = 0;
+        y_ = 0;
+        h_ = 0;
+    }
+    Pose(double X, double Y, double H): x_(X), y_(Y), h_(H){}
+    void setPose(Pose p){x_=p.x();y_=p.y();h_=p.heading();}
+    void setPose(double X, double Y, double H){x_=X;y_=Y;h_=clampH(H);}
+    void setPos(double X, double Y) {x_ = X; y_ = Y;}
+    void setHeading(double H) {h_=clampH(H);}
+    double x(){return x_;}
+    double y(){return y_;}
+    double heading(){return h_;}
     
-        private:
-            double x_;
-            double y_;
-            double h_; // degrees
+    private:
+    double x_;
+    double y_;
+    double h_; // degrees
+    double clampH(double H) // clamps the heading to be within (-180,180)
+    {
+        double result = std::fmod(H + 180,360);
+        return (result < 0)? result + 180 : result - 180;
+    }
 };
 
 
